@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import type User from "../../app/models/user";
 import { config } from "../../../app.config";
 import jwt from "jsonwebtoken";
+import consola from "consola";
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET || 'test_dev_key' as string;
 
@@ -70,34 +71,67 @@ export async function getUserSession(event: HttpEvent): Promise<UserSession | vo
     }
 }
 
-function setupSecretKey() {
-    if(process.env.NODE_ENV === 'development') {
-        return Buffer.from([180, 84, 59, 66, 232, 99, 238, 139, 209, 62, 99, 152, 106, 205, 85, 82, 185, 12, 154, 130, 19, 40, 131, 224, 61, 226, 49, 85, 109, 62, 73, 10])
+function setupSecretKey(): Buffer {
+    if (!process.env.NODE_ENV) {
+        throw new Error('NODE_ENV must be defined');
     }
-    if (process.env.NODE_ENV === 'production') {
-        return crypto.randomBytes(32);
+
+    if (process.env.NODE_ENV === 'development') {
+        return Buffer.from([180, 84, 59, 66, 232, 99, 238, 139, 209, 62, 99, 152, 106, 205, 85, 82, 185, 12, 154, 130, 19, 40, 131, 224, 61, 226, 49, 85, 109, 62, 73, 10]);
     }
+
+    return crypto.randomBytes(32);
 }
 
 const SECRET_KEY = setupSecretKey();
 const IV_LENGTH = 16;
 
 export function encryptPassword(password: string): string {
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-cbc', SECRET_KEY, iv);
-    let encrypted = cipher.update(password, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return `${iv.toString('hex')}:${encrypted}`;
+    if (!SECRET_KEY || !(SECRET_KEY instanceof Buffer)) {
+        throw new Error('Invalid SECRET_KEY configuration');
+    }
+
+    if (!password || typeof password !== 'string') {
+        throw new Error('Password must be a non-empty string');
+    }
+
+    try {
+        const iv = crypto.randomBytes(IV_LENGTH);
+        const cipher = crypto.createCipheriv('aes-256-cbc', SECRET_KEY, iv);
+        let encrypted = cipher.update(password, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return `${iv.toString('hex')}:${encrypted}`;
+    } catch (error: any) {
+        consola.error('Encryption error:', error.message, { password: !!password, secretKey: !!SECRET_KEY });
+        throw new Error('Failed to encrypt password');
+    }
 }
 
 export function decryptPassword(encryptedPassword: string): string {
-    console.log("encryptedPassword", encryptedPassword)
-    const [ivHex, encryptedHex] = encryptedPassword.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
-    console.log("iv", iv)
-    const decipher = crypto.createDecipheriv('aes-256-cbc', SECRET_KEY, iv);
-    console.log("decipher", decipher)
-    let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
+    if (!SECRET_KEY || !(SECRET_KEY instanceof Buffer)) {
+        throw new Error('Invalid SECRET_KEY configuration');
+    }
+
+    if (!encryptedPassword || typeof encryptedPassword !== 'string') {
+        throw new Error('Encrypted password must be a non-empty string');
+    }
+
+    try {
+        const [ivHex, encryptedHex] = encryptedPassword.split(':');
+        if (!ivHex || !encryptedHex) {
+            throw new Error('Invalid encrypted password format');
+        }
+
+        const iv = Buffer.from(ivHex, 'hex');
+        const decipher = crypto.createDecipheriv('aes-256-cbc', SECRET_KEY, iv);
+        let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    } catch (error: any) {
+        consola.error('Decryption error:', error.message, {
+            encryptedPassword: !!encryptedPassword,
+            secretKey: !!SECRET_KEY
+        });
+        throw new Error('Failed to decrypt password');
+    }
 }

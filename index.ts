@@ -3,8 +3,6 @@ import { config } from "./app.config";
 import Server from "./src/server/index";
 import router from "./src/routes";
 
-process.env.NODE_ENV = 'development';
-
 export const app = new Server();
 app.use(router);
 

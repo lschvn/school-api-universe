@@ -9,12 +9,12 @@ export default class Universe {
     public createdAt!: Date
     public updatedAt!: Date
 
-    static create(data: Partial<Universe>): void {
+    static create(data: Partial<Universe>): number | bigint {
         const now = new Date().toISOString()
         const query = db.prepare(
             'INSERT INTO universe (name, description, banner_url, user_id, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)'
         )
-        query.run(
+        const result = query.run(
             data.name!,
             data.description!,
             data.banner_url!,
@@ -22,6 +22,8 @@ export default class Universe {
             now,
             now
         )
+
+        return result.lastInsertRowid
     }
 
     static delete(id: number): void {
@@ -41,7 +43,7 @@ export default class Universe {
         query.run(...values)
     }
 
-    static findOne(id: number): Universe | null {
+    static findOne(id: number | bigint): Universe | null {
         const query = db.prepare('SELECT * FROM universe WHERE id = ?')
         const result = query.get(id) as Universe | null
         return result
@@ -63,5 +65,10 @@ export default class Universe {
         const query = db.prepare('SELECT * FROM universe WHERE name = ?')
         const result = query.get(name) as Universe | null
         return result
+    }
+
+    static generateBanner(prompt: string): string {
+        const url = `https://via.placeholder.com/800x200?text=${prompt}`
+        return url
     }
 }
