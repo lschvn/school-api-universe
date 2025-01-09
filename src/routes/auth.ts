@@ -6,6 +6,14 @@ import { getUserSession, setUserSession } from "../server/utils/session";
 
 export const authRouter = new Router({ prefix: '/auth' });
 
+/**
+ * @api {post} /auth/login
+ * @description Logs in a user with email and password
+ *
+ * @param {string} email - The email of the user
+ * @param {string} password - The password of the user
+ * @returns {object} - The user data
+ */
 authRouter.on('POST', '/login', async (event) => {
     const session = await getUserSession(event);
     if(session?.user) {
@@ -40,6 +48,15 @@ authRouter.on('POST', '/login', async (event) => {
     })
 })
 
+/**
+ * @api {post} /auth/signup
+ * @description Signs up a user with name, email and password
+ *
+ * @param {string} name - The name of the user
+ * @param {string} email - The email of the user
+ * @param {string} password - The password of the user
+ * @returns {object} - The user data
+ */
 authRouter.on('POST', '/signup', async (event) => {
     const session = await getUserSession(event);
     if(session?.user) {

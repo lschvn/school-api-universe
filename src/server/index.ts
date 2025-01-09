@@ -2,10 +2,34 @@ import http, { IncomingMessage, ServerResponse } from 'http';
 import type { Router } from './router';
 import consola from 'consola';
 
-export type Handler = (ctx: { req: IncomingMessage; res: ServerResponse }) => Promise<any> | any;
-export type HttpEvent = { req: IncomingMessage; res: ServerResponse };
+export type Handler = (ctx: { req: IncomingMessage; res: ServerResponse, params?: Record<string, string> }) => Promise<any> | any;
+export type HttpEvent = {
+    req: IncomingMessage;
+    res: ServerResponse;
+    params?: Record<string, string>;
+};
 
-class Server {
+function matchRoute(routePath: string, actualPath: string): { matched: boolean; params: Record<string, string> } {
+    const routeParts = routePath.split('/');
+    const urlParts = actualPath.split('/');
+
+    if (routeParts.length !== urlParts.length) {
+        return { matched: false, params: {} };
+    }
+
+    const params: Record<string, string> = {};
+    const matched = routeParts.every((routePart, i) => {
+        if (routePart.startsWith(':')) {
+            params[routePart.slice(1)] = urlParts[i];
+            return true;
+        }
+        return routePart === urlParts[i];
+    });
+
+    return { matched, params };
+}
+
+export class Server {
     public routes: Map<string, Handler> = new Map();
 
     on(method: string, path: string, handler: Handler): void {
@@ -29,37 +53,46 @@ class Server {
     private async handleRequest(req: IncomingMessage, res: ServerResponse) {
         const url = req.url ? this.normalizeUrl(req.url) : '/';
         const method = req.method?.toUpperCase() || 'GET';
-        const requestId = `${method} ${url}`;
 
-        consola.start({ message: requestId });
+        consola.start({ message: `${method} ${url}` });
         const start = performance.now();
 
         let handler: Handler | null = null;
+        let matchedParams: Record<string, string> = {};
+
         for (const [routeKey, routeHandler] of this.routes.entries()) {
             const [routeMethod, routePath] = routeKey.split(':');
-            if (routeMethod === method && url === routePath) {
-                handler = routeHandler;
-                break;
+            if (routeMethod === method) {
+                const { matched, params } = matchRoute(routePath, url);
+                if (matched) {
+                    handler = routeHandler;
+                    matchedParams = params;
+                    break;
+                }
             }
         }
 
         if (!handler) {
             res.statusCode = 404;
-            consola.warn({ message: `${requestId} - Not Found` });
+            consola.warn({ message: `${method} ${url} - Not Found` });
             res.end('Not Found');
             return;
         }
 
         try {
-            const result = await handler({ req, res });
+            const result = await handler({
+                req,
+                res,
+                params: matchedParams
+            });
             const end = performance.now();
             const duration = end - start;
 
             const timeStr = duration > 1000
-                ? `${(duration/1000).toFixed(2)}s`
+                ? `${(duration / 1000).toFixed(2)}s`
                 : `${Math.round(duration)}ms`;
 
-            consola.success({ message: `${requestId} took ${timeStr} \n` });
+            consola.success({ message: `${method} ${url} took ${timeStr} \n` });
 
             if (result !== undefined) {
                 if (typeof result === 'object') {
@@ -71,7 +104,7 @@ class Server {
                 }
             }
         } catch (error: any) {
-            consola.error({ message: `${requestId} - ${error.message}` });
+            consola.error({ message: `${method} ${url} - ${error.message}` });
             res.statusCode = 500;
             res.end(`Server Error: ${error.message}`);
         }
