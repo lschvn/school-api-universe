@@ -1,0 +1,30 @@
+{
+    "name": "api-universe",
+    "module": "index.ts",
+    "type": "module",
+    "scripts": {
+        "dev": "bun run --watch index.ts",
+        "db:migrate": "bun run ./src/database/migrate.ts",
+        "db:feed": "bun run ./src/database/feed.ts",
+        "lint:check": "eslint .",
+        "lint:fix": "eslint --fix .",
+        "test:all": "bun run ./src/test/character.db.ts && bun run ./src/test/universe.db.ts && bun run ./src/test/user.db.ts",
+        "test:character": "bun run ./src/test/character.db.ts",
+        "test:universe": "bun run ./src/test/universe.db.ts",
+        "test:user": "bun run ./src/test/user.db.ts"
+    },
+    "devDependencies": {
+        "@types/bun": "latest",
+        "globals": "^15.14.0"
+    },
+    "peerDependencies": {
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@types/express": "^5.0.0",
+        "@types/jsonwebtoken": "^9.0.7",
+        "consola": "^3.3.0",
+        "dotenv": "^16.4.7",
+        "jsonwebtoken": "^9.0.2"
+    }
+}
