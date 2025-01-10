@@ -1,8 +1,9 @@
 import { db } from '../../database/db';
+import type User from './user';
 
 export default class Conversation {
 	public id!: number;
-	public character_id!: string;
+	public character_id!: number;
 	public createdAt!: Date;
 	public updatedAt!: Date;
 
@@ -52,5 +53,17 @@ export default class Conversation {
 		);
 		const results = query.all(characterId) as Conversation[];
 		return results;
+	}
+
+	static getConversationOwner(conversationId: number): User {
+		const query = db.prepare(`
+			SELECT u.* FROM user u
+			JOIN universe univ ON u.id = univ.user_id
+			JOIN character c ON c.universe_id = univ.id
+			JOIN conversation conv ON conv.character_id = c.id
+			WHERE conv.id = ?
+			LIMIT 1;
+		`);
+		return query.get(conversationId) as User;
 	}
 }
