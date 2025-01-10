@@ -1,59 +1,64 @@
+import Character from "../app/models/character";
 import Universe from "../app/models/universe";
 import { Server } from "../server";
 import { readBody } from "../server/utils/body";
 import { createError, createResponse, getRouterParam } from "../server/utils/http";
 import { getUserSession } from "../server/utils/session";
 
-export const universeRouter = new Server('/api/universe');
+export const characterRouter = new Server('/api/character');
 
 /**
- * @api {post} /universe/new
- * @description Create a new universe
+ * @api {post} /character/new
+ * @description Create a new character
  *
- * @param {string} name - The name of the universe
- * @param {string} description - The description of the universe
- * @returns {object} - The created universe
+ * @param {string} name - The name of the character
+ * @param {string} description - The description of the character
+ * @param {number} univer_id - The id of the universe the character belongs to
+ * @returns {object} - The created character
  */
-universeRouter.on('POST', '/new', async (event) => {
+characterRouter.on('POST', '/new', async (event) => {
     const session = await getUserSession(event);
     if(!session?.user) {
         return createError(event, {status: 401, message: 'Unauthorized'})
     }
 
-    const body = await readBody(event) as {name: string, description: string};
+    const body = await readBody(event) as {name: string, description: string, univer_id: number};
     if(!body.name) {
         return createError(event, {status: 422, message: 'Name is required'})
     }
     if(!body.description) {
         return createError(event, {status: 422, message: 'Description is required'})
     }
-
-    const universeId = Universe.create({
-        name: body.name,
-        description: body.description,
-        user_id: session.user.id,
-    })
-    if(!universeId) {
-        return createError(event, {status: 500, message: 'Failed to create universe'})
+    if(!body.univer_id) {
+        return createError(event, {status: 422, message: 'Universe id is required'})
     }
 
-    const universe = Universe.findOne(universeId);
+    const characterId = Character.create({
+        name: body.name,
+        description: body.description,
+        univer_id: body.univer_id,
+    })
+    if(!characterId) {
+        return createError(event, {status: 500, message: 'Failed to create character'})
+    }
+
+    const character = Character.findOne(characterId);
 
     return createResponse(event, {
         status: 201,
-        message: 'Universe created successfully',
-        data: {universe}
+        message: 'Character created successfully',
+        data: {character}
     })
 })
 
 /**
- * @api {get} /universe/:id
- * @description Get a universe by id
+ * @api {get} /character/:id
+ * @description Get a character by id
  *
- * @param {number} id - The id of the universe
- * @returns {object} - The requested universe
+ * @param {number} id - The id of the character
+ * @returns {object} - The requested character
  */
-universeRouter.on('GET', '/:id', async (event) => {
+characterRouter.on('GET', '/:id', async (event) => {
     const id = getRouterParam(event, 'id');
     if (!id) {
         return createError(event, {
@@ -62,33 +67,28 @@ universeRouter.on('GET', '/:id', async (event) => {
         });
     }
 
-    const session = await getUserSession(event);
-    if(!session?.user) {
-        return createError(event, {status: 401, message: 'Unauthorized'})
-    }
-
-    const universe = Universe.findOne(parseInt(id));
-    if (!universe) {
+    const character = Character.findOne(parseInt(id));
+    if (!character) {
         return createError(event, {
             status: 404,
-            message: 'Universe not found'
+            message: 'Character not found'
         });
     }
 
     return createResponse(event, {
         status: 200,
-        data: { universe }
+        data: { character }
     });
 });
 
 /**
- * @api {delete} /universe/:id
- * @description Delete a universe by id
+ * @api {delete} /character/:id
+ * @description Delete a character by id
  *
- * @param {number} id - The id of the universe
+ * @param {number} id - The id of the character
  * @returns {object} - The success message
  */
-universeRouter.on('DELETE', '/:id', async (event) => {
+characterRouter.on('DELETE', '/:id', async (event) => {
     const id = getRouterParam(event, 'id');
     if (!id) {
         return createError(event, {
@@ -102,8 +102,16 @@ universeRouter.on('DELETE', '/:id', async (event) => {
         return createError(event, {status: 401, message: 'Unauthorized'})
     }
 
-    const universe = Universe.findOne(parseInt(id));
-    if (!universe) {
+    const character = Character.findOne(parseInt(id));
+    if (!character) {
+        return createError(event, {
+            status: 404,
+            message: 'Character not found'
+        });
+    }
+
+    const universe = Universe.findOne(character.univer_id);
+    if(!universe) {
         return createError(event, {
             status: 404,
             message: 'Universe not found'
@@ -114,38 +122,24 @@ universeRouter.on('DELETE', '/:id', async (event) => {
         return createError(event, {status: 403, message: 'Unauthorized'})
     }
 
-    Universe.delete(parseInt(id));
+
+    Character.delete(parseInt(id));
     return createResponse(event, {
         status: 200,
-        message: 'Universe deleted successfully',
+        message: 'Character deleted successfully',
     });
 })
 
 /**
- * @api {get} /universe
- * @description Get all universes
+ * @api {put} /character/:id
+ * @description Update a character by id
  *
- * @returns {object} - The list of universes
+ * @param {number} id - The id of the character
+ * @param {string} name - The name of the character
+ * @param {string} description - The description of the character
+ * @returns {object} - The updated character
  */
-universeRouter.on('GET', '/', async (event) => {
-    const universes = Universe.findAll();
-    return createResponse(event, {
-        status: 200,
-        data: { universes },
-        message: 'List of universes fetched successfully'
-    });
-});
-
-/**
- * @api {put} /universe/:id
- * @description Update a universe by id
- *
- * @param {number} id - The id of the universe
- * @param {string} name - The name of the universe
- * @param {string} description - The description of the universe
- * @returns {object} - The updated universe
- */
-universeRouter.on('PUT', '/:id', async (event) => {
+characterRouter.on('PUT', '/:id', async (event) => {
     const id = getRouterParam(event, 'id');
     if (!id) {
         return createError(event, {
@@ -159,8 +153,16 @@ universeRouter.on('PUT', '/:id', async (event) => {
         return createError(event, {status: 401, message: 'Unauthorized'})
     }
 
-    const universe = Universe.findOne(parseInt(id));
-    if (!universe) {
+    const character = Character.findOne(parseInt(id));
+    if (!character) {
+        return createError(event, {
+            status: 404,
+            message: 'Character not found'
+        });
+    }
+
+    const universe = Universe.findOne(character.univer_id);
+    if(!universe) {
         return createError(event, {
             status: 404,
             message: 'Universe not found'
@@ -179,14 +181,14 @@ universeRouter.on('PUT', '/:id', async (event) => {
         return createError(event, {status: 422, message: 'Description is required'})
     }
 
-    Universe.update(parseInt(id), {
+    Character.update(parseInt(id), {
         name: body.name,
         description: body.description,
     });
 
     return createResponse(event, {
         status: 200,
-        message: 'Universe updated successfully',
-        data: {universe: Universe.findOne(parseInt(id))}
+        message: 'Character updated successfully',
+        data: {character: Character.findOne(parseInt(id))}
     });
 })

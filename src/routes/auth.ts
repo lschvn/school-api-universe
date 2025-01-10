@@ -1,8 +1,10 @@
+import { consola } from "consola";
 import AuthController from "../app/controllers/auth";
 import { Server } from "../server";
 import { readBody } from "../server/utils/body";
 import { createError, createResponse } from "../server/utils/http";
 import { getUserSession, setUserSession } from "../server/utils/session";
+import User from "../app/models/user";
 
 export const authRouter = new Server('/api/auth');
 
@@ -25,13 +27,15 @@ authRouter.on('POST', '/login', async (event) => {
 
     const body = await readBody(event) as { email: string, password: string };
 
-    const user = AuthController.login(body.email, body.password);
-    if(!user) {
+    const result = AuthController.login(body.email, body.password);
+    if(typeof result === 'string') {
         return createError(event, {
             status: 401,
-            message: 'Invalid email or password'
+            message: result
         })
     }
+
+    const user = User.sanitize(result);
 
     await setUserSession(event, {
         user: {
@@ -68,23 +72,22 @@ authRouter.on('POST', '/signup', async (event) => {
 
     const body = await readBody(event) as { name: string, email: string, password: string };
 
-    const user = AuthController.signup(body.name, body.email, body.password);
-    if(!user) {
+    const result = AuthController.signup(body.name, body.email, body.password);
+    if(typeof result === 'string') {
         return createError(event, {
             status: 400,
-            message: 'User already exists, please login'
+            message: result
         })
     }
 
-    delete user.password;
     await setUserSession(event, {
-        user,
+        user: User.sanitize(result),
         lastLoggedIn: new Date()
     });
 
     return createResponse(event, {
         status: 200,
-        data: user,
+        data: result,
         message: 'User signed up'
     })
 })

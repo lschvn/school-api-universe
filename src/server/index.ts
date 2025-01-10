@@ -5,64 +5,49 @@ export type Handler = (ctx: { req: Request; res: Response; params?: Record<strin
 export type HttpEvent = { req: Request; res: Response; params?: Record<string, string> };
 
 export class Server {
-    private static app = express();
-    private routes = new Map<string, Handler>();
+    private static mainApp = express();
+    public router = express.Router();
     private prefix: string;
-    private router = express.Router();
 
-    constructor(prefix: string = '') {
+    constructor(prefix = '') {
         this.prefix = prefix;
-        if (!Server.app._router) {
-            Server.app.use(express.json());
-        }
-        Server.app.use(this.prefix, this.router);
+        Server.mainApp.use(express.json());
     }
 
     on(method: string, path: string, handler: Handler) {
-        const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-        const key = `${method.toUpperCase()}:${this.prefix}${normalizedPath}`;
+        const normPath = path.startsWith('/') ? path : `/${path}`;
+        const fullPath = `${this.prefix}${normPath}`;
 
-        this.routes.set(key, handler);
+        (this.router as any)[method.toLowerCase()](normPath, async (req: Request, res: Response) => {
+            const start = performance.now();
+            consola.start(`${method.toUpperCase()} ${fullPath}`);
 
-        (this.router as any)[method.toLowerCase()](normalizedPath, async (req: Request, res: Response) => {
             try {
-                const result = await handler({
-                    req,
-                    res,
-                    params: req.params,
-                });
+                const result = await handler({ req, res, params: req.params });
+
+                const duration = Math.round(performance.now() - start);
+                consola.success(`${method.toUpperCase()} ${fullPath} - ${duration}ms \n`);
 
                 if (result === undefined) return;
-
-                if (typeof result === 'object') {
-                    res.json(result);
-                } else {
-                    res.send(String(result));
-                }
+                typeof result === 'object' ? res.json(result) : res.send(String(result));
             } catch (error: any) {
-                consola.error(error);
+                const duration = Math.round(performance.now() - start);
+                consola.error({
+                    message: `${method.toUpperCase()} ${fullPath} - ${error.message}`,
+                    badge: true,
+                    additional: `${duration}ms`
+                });
                 res.status(500).send(error.message);
             }
         });
     }
 
-    use(server: Server) {
-        server.getRoutes().forEach((handler, key) => {
-            const [method, path] = key.split(':');
-            const routePath = path.replace(server.prefix, '');
-            this.on(method, routePath, handler);
-        });
-    }
-
-    getRoutes() {
-        return this.routes;
+    use(subServer: Server) {
+        this.router.use(subServer.prefix, subServer.router);
     }
 
     listen(port: number, callback?: () => void) {
-        return Server.app.listen(port, () => {
-            if (callback) {
-                callback();
-            }
-        });
+        Server.mainApp.use(this.prefix, this.router);
+        Server.mainApp.listen(port, () => callback?.());
     }
 }

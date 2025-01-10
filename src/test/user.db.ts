@@ -1,4 +1,4 @@
-import User from '../models/user'
+import User from '../app/models/user'
 import consola from 'consola'
 
 const testUser1 = {

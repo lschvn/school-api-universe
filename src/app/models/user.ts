@@ -1,4 +1,5 @@
 import { db } from '../../database/db'
+import type Universe from './universe'
 
 export default class User {
     public id!: number
@@ -31,6 +32,7 @@ export default class User {
         const query = db.prepare(
             `UPDATE user SET ${updates}, updatedAt = ? WHERE id = ?`
         )
+        // @ts-ignore
         query.run(...values)
     }
 
@@ -50,6 +52,12 @@ export default class User {
         const query = db.prepare('SELECT * FROM user WHERE email = ?')
         const result = query.get(email) as User | null
         return result
+    }
+
+    static getUniverses(id: number): Universe[] {
+        const query = db.prepare('SELECT * FROM universe WHERE user_id = ?')
+        const results = query.all(id) as Universe[]
+        return results
     }
 
     static sanitize(user: Partial<User>) {

@@ -9,12 +9,12 @@ export default class Character {
     public createdAt!: Date
     public updatedAt!: Date
 
-    static create(data: Partial<Character>): void {
+    static create(data: Partial<Character>): number{
         const now = new Date().toISOString()
         const query = db.prepare(
             'INSERT INTO character (name, description, avatar_url, univer_id, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)'
         )
-        query.run(
+        const result = query.run(
             data.name!,
             data.description!,
             data.avatar_url!,
@@ -22,6 +22,7 @@ export default class Character {
             now,
             now
         )
+        return result.lastInsertRowid
     }
 
     static delete(id: number): void {

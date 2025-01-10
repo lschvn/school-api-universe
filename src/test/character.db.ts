@@ -1,6 +1,6 @@
-import Character from '../models/character'
-import Universe from '../models/universe'
-import User from '../models/user'
+import Character from '../app/models/character'
+import Universe from '../app/models/universe'
+import User from '../app/models/user'
 import consola from 'consola'
 
 const testUser = {

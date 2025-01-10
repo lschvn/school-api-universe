@@ -2,13 +2,13 @@ import { decryptPassword, encryptPassword } from "../../server/utils/session"
 import User from "../models/user"
 
 export default class AuthController {
-    static signup(name: string, email: string, password: string): Partial<User> | void {
-        if(!name) { return }
-        if(!email) { return }
-        if(!password) { return }
+    static signup(name: string, email: string, password: string): Partial<User> | string {
+        if(!name) { return "Name is required" }
+        if(!email) { return "Email is required" }
+        if(!password) { return "Password is required" }
 
         if(User.findByEmail(email)) {
-            return
+            return "User already exists"
         }
 
         password = encryptPassword(password)
@@ -16,24 +16,24 @@ export default class AuthController {
             email, password, name
         })
 
-        if(!id) { return }
+        if(!id) { return "Failed to create user" }
 
         const user = User.findOne(id)
-        if(!user) { return }
+        if(!user) { return "User not found" }
 
         return user
     }
 
-    static login(email: string, password: string): Partial<User> | void {
-        if(!email) { return }
-        if(!password) { return }
+    static login(email: string, password: string): Partial<User> | string {
+        if(!email) { return "Email is required" }
+        if(!password) { return "Password is required" }
 
 
         const user = User.findByEmail(email)
-        if(!user) { return }
+        if(!user) { return "User does not exist" }
 
         if(decryptPassword(user.password) !== password) {
-            return
+            return "Invalid password"
         }
 
         return {

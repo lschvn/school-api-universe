@@ -77,3 +77,5 @@ const generateFakeData = () => {
 
 generateFakeData()
 consola.info('Fake data generated')
+
+// TODO: rename fixtures

@@ -5,9 +5,12 @@ import router from "./src/routes";
 
 export const app = new Server();
 
+app.use(router);
+
 app.on('GET', '/', (event) => {
     return {
-        routes: Array.from(router.getRoutes().keys())
+        status: 200,
+        message: 'Welcome to the API'
     }
 })
 
