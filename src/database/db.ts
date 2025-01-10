@@ -1,3 +1,3 @@
-import { Database } from 'bun:sqlite'
+import { Database } from 'bun:sqlite';
 
-export const db = new Database('./src/database/db.sqlite', { create: true })
+export const db = new Database('./src/database/db.sqlite', { create: true });

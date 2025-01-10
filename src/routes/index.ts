@@ -6,9 +6,9 @@ import { userRouter } from './user';
 
 const router = new Server();
 
-router.use(authRouter)
-router.use(userRouter)
-router.use(universeRouter)
-router.use(characterRouter)
+router.use(authRouter);
+router.use(userRouter);
+router.use(universeRouter);
+router.use(characterRouter);
 
 export default router;

@@ -1,8 +1,8 @@
-import consola from 'consola'
-import { db } from './db'
+import consola from 'consola';
+import { db } from './db';
 
 const userMigration = () =>
-    db.run(`
+	db.run(`
     CREATE TABLE IF NOT EXISTS user (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR(255) NOT NULL UNIQUE,
@@ -11,10 +11,10 @@ const userMigration = () =>
         createdAt DATETIME,
         updatedAt DATETIME
     );
-`)
+`);
 
 const universeMigration = () =>
-    db.run(`
+	db.run(`
     CREATE TABLE IF NOT EXISTS universe (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR(255) NOT NULL,
@@ -28,10 +28,10 @@ const universeMigration = () =>
         ON DELETE CASCADE
         ON UPDATE CASCADE
     );
-`)
+`);
 
 const characterMigration = () => {
-    db.run(`
+	db.run(`
     CREATE TABLE IF NOT EXISTS character (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR(255) NOT NULL,
@@ -45,12 +45,47 @@ const characterMigration = () => {
         ON DELETE CASCADE
         ON UPDATE CASCADE
     );
-    `)
-}
+    `);
+};
 
-userMigration()
-consola.info('User table created')
-universeMigration()
-consola.info('Universe table created')
-characterMigration()
-consola.info('Character table created')
+const conversationMigration = () => {
+	db.run(`
+    CREATE TABLE IF NOT EXISTS conversation (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        character_id INT,
+        createdAt DATETIME,
+        updatedAt DATETIME,
+        CONSTRAINT fk_character
+        FOREIGN KEY (character_id) REFERENCES character(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    );
+    `);
+};
+
+const messageMigration = () => {
+	db.run(`
+    CREATE TABLE IF NOT EXISTS message (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        conversation_id INT,
+        content TEXT,
+        createdAt DATETIME,
+        updatedAt DATETIME,
+        CONSTRAINT fk_conversation
+        FOREIGN KEY (conversation_id) REFERENCES conversation(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+    );
+    `);
+};
+
+userMigration();
+consola.info('User table created');
+universeMigration();
+consola.info('Universe table created');
+characterMigration();
+consola.info('Character table created');
+conversationMigration();
+consola.info('Conversation table created');
+messageMigration();
+consola.info('Message table created');
