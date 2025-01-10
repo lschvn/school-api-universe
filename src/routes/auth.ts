@@ -1,10 +1,10 @@
 import AuthController from "../app/controllers/auth";
-import { Router } from "../server/router";
+import { Server } from "../server";
 import { readBody } from "../server/utils/body";
 import { createError, createResponse } from "../server/utils/http";
 import { getUserSession, setUserSession } from "../server/utils/session";
 
-export const authRouter = new Router({ prefix: '/auth' });
+export const authRouter = new Server('/api/auth');
 
 /**
  * @api {post} /auth/login

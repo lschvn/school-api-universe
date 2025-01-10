@@ -1,10 +1,9 @@
 import consola from "consola";
 import { config } from "./app.config";
-import Server from "./src/server/index";
+import { Server } from "./src/server/index";
 import router from "./src/routes";
 
 export const app = new Server();
-app.use(router);
 
 app.on('GET', '/', (event) => {
     return {

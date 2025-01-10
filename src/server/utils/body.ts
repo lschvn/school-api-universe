@@ -1,4 +1,4 @@
-import type { HttpEvent } from "../http";
+import type { HttpEvent } from "..";
 
 export function readBody(event: HttpEvent) {
     return new Promise((resolve, reject) => {

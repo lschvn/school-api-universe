@@ -15,7 +15,7 @@ export function createError(event: HttpEvent, { status, message }: ErrorOptions)
 }
 
 type ResponseOptions = {
-    data: any;
+    data?: any;
     status: number;
     message?: string;
 }
