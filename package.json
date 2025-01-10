@@ -11,7 +11,8 @@
 		"test:all": "bun run ./src/test/character.db.ts && bun run ./src/test/universe.db.ts && bun run ./src/test/user.db.ts",
 		"test:character": "bun run ./src/test/character.db.ts",
 		"test:universe": "bun run ./src/test/universe.db.ts",
-		"test:user": "bun run ./src/test/user.db.ts"
+		"test:user": "bun run ./src/test/user.db.ts",
+        "benchmark": "bun run ./src/test/benchmark.ts"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
