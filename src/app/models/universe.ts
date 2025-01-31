@@ -1,4 +1,5 @@
 import { db } from '../../database/db';
+import type Character from './character';
 
 export default class Universe {
 	public id!: number;
@@ -73,7 +74,7 @@ export default class Universe {
 	}
 
 	static getCharacters(id: number): Character[] {
-		const query = db.prepare('SELECT * FROM character WHERE universe_id = ?');
+		const query = db.prepare('SELECT * FROM character WHERE univer_id = ?');
 		const results = query.all(id) as Character[];
 		return results;
 	}

@@ -86,20 +86,20 @@ conversationRouter.on('DELETE', '/:id', async (event) => {
 		});
 	}
 
-    const conversation = Conversation.findOne(parseInt(id))
-    if (!conversation) {
+	const conversation = Conversation.findOne(parseInt(id));
+	if (!conversation) {
 		return createError(event, {
 			status: 400,
 			message: 'Conversation Not Found',
 		});
-    }
+	}
 
-    const owner = Conversation.getConversationOwner(conversation.id)
-    if(owner.id) {
-        /**
-         *  TODO: end this logic
-         *  need to add getUniverse(conversationId) to Conversation
-         *  to compare owner.id and universe.user_id
-        */
-    }
+	const owner = Conversation.getConversationOwner(conversation.id);
+	if (owner.id) {
+		/**
+		 *  TODO: end this logic
+		 *  need to add getUniverse(conversationId) to Conversation
+		 *  to compare owner.id and universe.user_id
+		 */
+	}
 });
