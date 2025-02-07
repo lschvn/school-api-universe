@@ -101,8 +101,7 @@ export function encryptPassword(password: string): string {
 
 	try {
 		const iv = crypto.randomBytes(IV_LENGTH);
-		const secretKeyArray = new Uint8Array(SECRET_KEY);
-		const cipher = crypto.createCipheriv('aes-256-cbc', secretKeyArray, iv);
+		const cipher = crypto.createCipheriv('aes-256-cbc', SECRET_KEY, iv);
 		let encrypted = cipher.update(password, 'utf8', 'hex');
 		encrypted += cipher.final('hex');
 		return `${iv.toString('hex')}:${encrypted}`;
@@ -134,8 +133,7 @@ export function decryptPassword(encryptedPassword: string): string {
 		secretKeyLength: SECRET_KEY.length,
 		encryptedHexLength: encryptedHex.length,
 	});
-	const secretKeyArray = new Uint8Array(SECRET_KEY);
-	const decipher = crypto.createDecipheriv('aes-256-cbc', secretKeyArray, iv);
+	const decipher = crypto.createDecipheriv('aes-256-cbc', SECRET_KEY, iv);
 	let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
 	decrypted += decipher.final('utf8');
 	console.log('Password decrypted successfully');

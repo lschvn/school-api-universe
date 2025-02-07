@@ -1,0 +1,694 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"title": "Universe API",
+		"version": "1.0.0",
+		"description": "API for managing users, universes, characters and conversations."
+	},
+	"servers": [
+		{
+			"url": "http://localhost:3000",
+			"description": "Local server"
+		}
+	],
+	"paths": {
+		"/api/auth/login": {
+			"post": {
+				"tags": ["Auth"],
+				"summary": "Logs in a user with email and password",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"email": {
+										"type": "string",
+										"example": "user@example.com"
+									},
+									"password": {
+										"type": "string",
+										"example": "password123"
+									}
+								},
+								"required": ["email", "password"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User logged in",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/User" }
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized or invalid password"
+					}
+				}
+			}
+		},
+		"/api/auth/signup": {
+			"post": {
+				"tags": ["Auth"],
+				"summary": "Signs up a new user",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"example": "John Doe"
+									},
+									"email": {
+										"type": "string",
+										"example": "john@example.com"
+									},
+									"password": {
+										"type": "string",
+										"example": "password123"
+									}
+								},
+								"required": ["name", "email", "password"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User signed up successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/User" }
+							}
+						}
+					},
+					"400": {
+						"description": "Missing parameter or user already exists"
+					}
+				}
+			}
+		},
+		"/api/user/get/{id}": {
+			"get": {
+				"tags": ["User"],
+				"summary": "Get a user by id",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "User found successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"user": { "$ref": "#/components/schemas/User" }
+									}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found"
+					}
+				}
+			}
+		},
+		"/api/user/{id}": {
+			"delete": {
+				"tags": ["User"],
+				"summary": "Deletes a user by id",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": { "description": "User deleted successfully" },
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "User not found" }
+				}
+			}
+		},
+		"/api/user/universes": {
+			"get": {
+				"tags": ["User"],
+				"summary": "Get all universes for the logged in user",
+				"responses": {
+					"200": {
+						"description": "Universes found successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"universes": {
+											"type": "array",
+											"items": { "$ref": "#/components/schemas/Universe" }
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "No universes found" }
+				}
+			}
+		},
+		"/api/universe/new": {
+			"post": {
+				"tags": ["Universe"],
+				"summary": "Create a new universe",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"example": "Marvel Universe"
+									},
+									"description": {
+										"type": "string",
+										"example": "Super-heroes universe"
+									}
+								},
+								"required": ["name", "description"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Universe created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"universe": { "$ref": "#/components/schemas/Universe" }
+									}
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" },
+					"500": { "description": "Failed to create universe" }
+				}
+			}
+		},
+		"/api/universe/{id}": {
+			"get": {
+				"tags": ["Universe"],
+				"summary": "Get a universe by id",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Universe retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"universe": { "$ref": "#/components/schemas/Universe" }
+									}
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "Universe not found" }
+				}
+			},
+			"delete": {
+				"tags": ["Universe"],
+				"summary": "Delete a universe by id",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": { "description": "Universe deleted successfully" },
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "Universe not found" }
+				}
+			},
+			"put": {
+				"tags": ["Universe"],
+				"summary": "Update a universe by id",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"example": "Updated Universe Name"
+									},
+									"description": {
+										"type": "string",
+										"example": "Updated description"
+									}
+								},
+								"required": ["name", "description"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Universe updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"universe": { "$ref": "#/components/schemas/Universe" }
+									}
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "Universe not found" }
+				}
+			}
+		},
+		"/api/universe": {
+			"get": {
+				"tags": ["Universe"],
+				"summary": "Get all universes",
+				"responses": {
+					"200": {
+						"description": "List of universes fetched successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"universes": {
+											"type": "array",
+											"items": { "$ref": "#/components/schemas/Universe" }
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/api/universe/{id}/characters": {
+			"get": {
+				"tags": ["Universe"],
+				"summary": "Get all characters for a given universe",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of characters fetched successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"characters": {
+											"type": "array",
+											"items": { "$ref": "#/components/schemas/Character" }
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" }
+				}
+			}
+		},
+		"/api/character/new": {
+			"post": {
+				"tags": ["Character"],
+				"summary": "Create a new character",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"example": "Spider-Man"
+									},
+									"description": {
+										"type": "string",
+										"example": "Friendly neighborhood hero"
+									},
+									"univer_id": {
+										"type": "integer",
+										"example": 1
+									}
+								},
+								"required": ["name", "description", "univer_id"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Character created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"character": { "$ref": "#/components/schemas/Character" }
+									}
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" },
+					"500": { "description": "Failed to create character" }
+				}
+			}
+		},
+		"/api/character/{id}": {
+			"get": {
+				"tags": ["Character"],
+				"summary": "Get a character by id",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Character retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Character" }
+							}
+						}
+					},
+					"404": { "description": "Character not found" }
+				}
+			},
+			"delete": {
+				"tags": ["Character"],
+				"summary": "Delete a character by id",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": { "description": "Character deleted successfully" },
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "Character or universe not found" }
+				}
+			},
+			"put": {
+				"tags": ["Character"],
+				"summary": "Update a character by id",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string",
+										"example": "Updated Spider-Man"
+									},
+									"description": {
+										"type": "string",
+										"example": "Updated description"
+									}
+								},
+								"required": ["name", "description"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Character updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"character": { "$ref": "#/components/schemas/Character" }
+									}
+								}
+							}
+						}
+					},
+					"404": { "description": "Character not found" }
+				}
+			}
+		},
+		"/api/conversation/new": {
+			"post": {
+				"tags": ["Conversation"],
+				"summary": "Create a new conversation",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"character_id": {
+										"type": "integer",
+										"example": 1
+									}
+								},
+								"required": ["character_id"]
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Conversation created successfully",
+						"content": {
+							"application/json": {
+								"schema": { "$ref": "#/components/schemas/Conversation" }
+							}
+						}
+					},
+					"400": { "description": "Conversation already exists" },
+					"500": { "description": "An error occurred" }
+				}
+			}
+		},
+		"/api/conversation/{id}": {
+			"get": {
+				"tags": ["Conversation"],
+				"summary": "Get a conversation and its messages",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Conversation retrieved with messages",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"conversation": {
+											"$ref": "#/components/schemas/Conversation"
+										},
+										"messages": {
+											"type": "array",
+											"items": { "$ref": "#/components/schemas/Message" }
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "Conversation not found" }
+				}
+			},
+			"delete": {
+				"tags": ["Conversation"],
+				"summary": "Delete a conversation",
+				"parameters": [
+					{
+						"name": "id",
+						"in": "path",
+						"required": true,
+						"schema": { "type": "integer" }
+					}
+				],
+				"responses": {
+					"200": { "description": "Conversation deleted successfully" },
+					"401": { "description": "Unauthorized" },
+					"404": { "description": "Conversation not found" }
+				}
+			}
+		},
+		"/api/conversation": {
+			"get": {
+				"tags": ["Conversation"],
+				"summary": "Get all conversations for a user",
+				"responses": {
+					"200": {
+						"description": "List of conversations",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": { "$ref": "#/components/schemas/Conversation" }
+								}
+							}
+						}
+					},
+					"401": { "description": "Unauthorized" }
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"User": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "example": 1 },
+					"name": { "type": "string", "example": "John Doe" },
+					"email": { "type": "string", "example": "john@example.com" },
+					"password": { "type": "string", "example": "encrypted_password" },
+					"createdAt": { "type": "string", "format": "date-time" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				}
+			},
+			"Universe": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "example": 1 },
+					"name": { "type": "string", "example": "Marvel Universe" },
+					"description": {
+						"type": "string",
+						"example": "Super-heroes universe"
+					},
+					"banner_url": {
+						"type": "string",
+						"example": "https://example.com/banner.jpg"
+					},
+					"user_id": { "type": "integer", "example": 1 },
+					"createdAt": { "type": "string", "format": "date-time" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				}
+			},
+			"Character": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "example": 1 },
+					"name": { "type": "string", "example": "Spider-Man" },
+					"description": {
+						"type": "string",
+						"example": "Friendly neighborhood hero"
+					},
+					"avatar_url": {
+						"type": "string",
+						"example": "https://example.com/spiderman.jpg"
+					},
+					"univer_id": { "type": "integer", "example": 1 },
+					"createdAt": { "type": "string", "format": "date-time" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				}
+			},
+			"Conversation": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "example": 1 },
+					"character_id": { "type": "integer", "example": 1 },
+					"createdAt": { "type": "string", "format": "date-time" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				}
+			},
+			"Message": {
+				"type": "object",
+				"properties": {
+					"id": { "type": "integer", "example": 1 },
+					"conversation_id": { "type": "integer", "example": 1 },
+					"content": { "type": "string", "example": "Hello, world!" },
+					"createdAt": { "type": "string", "format": "date-time" },
+					"updatedAt": { "type": "string", "format": "date-time" }
+				}
+			}
+		}
+	}
+}

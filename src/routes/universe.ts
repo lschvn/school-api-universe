@@ -1,3 +1,4 @@
+import AI from '../app/controllers/ai';
 import Universe from '../app/models/universe';
 import { Server } from '../server';
 import { readBody } from '../server/utils/body';
@@ -24,20 +25,18 @@ universeRouter.on('POST', '/new', async (event) => {
 		return createError(event, { status: 401, message: 'Unauthorized' });
 	}
 
-	const body = (await readBody(event)) as { name: string; description: string };
+	const body = (await readBody(event)) as { name: string };
 	if (!body.name) {
 		return createError(event, { status: 422, message: 'Name is required' });
 	}
-	if (!body.description) {
-		return createError(event, {
-			status: 422,
-			message: 'Description is required',
-		});
-	}
+
+	const description = await AI.Description(body.name);
+	const bannerUrl = await AI.Banner(description);
 
 	const universeId = Universe.create({
 		name: body.name,
-		description: body.description,
+		description,
+		banner_url: bannerUrl,
 		user_id: session.user.id,
 	});
 	if (!universeId) {

@@ -95,11 +95,83 @@ conversationRouter.on('DELETE', '/:id', async (event) => {
 	}
 
 	const owner = Conversation.getConversationOwner(conversation.id);
-	if (owner.id) {
-		/**
-		 *  TODO: end this logic
-		 *  need to add getUniverse(conversationId) to Conversation
-		 *  to compare owner.id and universe.user_id
-		 */
+	if (owner.id !== session.user.id) {
+		return createError(event, {
+			status: 403,
+			message: 'Unauthorized',
+		});
 	}
+
+	Conversation.delete(conversation.id);
+	return createResponse(event, {
+		status: 200,
+		message: 'Conversation deleted successfully',
+	});
+});
+
+/**
+ * @api {get} /conversation/:id
+ * @description Get a conversation
+ *
+ * @returns {object} - The conversation and its messages
+ */
+conversationRouter.on('GET', '/:id', async (event) => {
+	const session = await getUserSession(event);
+	if (!session?.user) {
+		return createError(event, { status: 401, message: 'Unauthorized' });
+	}
+
+	const id = getRouterParam(event, 'id');
+	if (!id) {
+		return createError(event, {
+			status: 400,
+			message: 'Missing required id parameter',
+		});
+	}
+
+	const conversation = Conversation.findOne(parseInt(id));
+	if (!conversation) {
+		return createError(event, {
+			status: 400,
+			message: 'Conversation Not Found',
+		});
+	}
+
+	const owner = Conversation.getConversationOwner(conversation.id);
+	if (owner.id !== session.user.id) {
+		return createError(event, {
+			status: 403,
+			message: 'Unauthorized',
+		});
+	}
+
+	const messages = Conversation.getMessages(conversation.id);
+	return createResponse(event, {
+		status: 200,
+		data: {
+			conversation,
+			messages,
+		},
+	});
+});
+
+/**
+ * @api {get} /conversation
+ * @description Get all conversations
+ *
+ * @returns {object} - All conversations for a user
+ */
+conversationRouter.on('GET', '/', async (event) => {
+	const session = await getUserSession(event);
+	if (!session?.user) {
+		return createError(event, { status: 401, message: 'Unauthorized' });
+	}
+
+	const conversations = Conversation.getConversationsForUser(
+		Number(session.user.id),
+	);
+	return createResponse(event, {
+		status: 200,
+		data: conversations,
+	});
 });

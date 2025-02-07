@@ -1,5 +1,7 @@
 import express, { type Request, type Response } from 'express';
 import consola from 'consola';
+import path from 'path';
+import { apiReference } from '@scalar/express-api-reference'; // New import for Scalar
 
 export type Handler = (ctx: {
 	req: Request;
@@ -20,6 +22,33 @@ export class Server {
 	constructor(prefix = '') {
 		this.prefix = prefix;
 		Server.mainApp.use(express.json());
+	}
+
+	// Adds a route for Scalar documentation integration.
+	// openapiPath: relative or absolute path to your OpenAPI spec file (e.g., 'openapi.json')
+	// theme: one of Scalar's themes ('default', 'alternate', 'moon', 'purple', 'solarized')
+	scalar(
+		openapiPath: string,
+		theme:
+			| 'default'
+			| 'alternate'
+			| 'moon'
+			| 'purple'
+			| 'solarized' = 'default',
+	): void {
+		const specFile = path.resolve(process.cwd(), openapiPath);
+		// Serve the OpenAPI specification file
+		Server.mainApp.use('/openapi.json', (req: Request, res: Response) => {
+			res.sendFile(specFile);
+		});
+		// Integrate Scalar's API reference middleware
+		Server.mainApp.use(
+			'/reference',
+			apiReference({
+				spec: { url: '/openapi.json' },
+				theme, // Optional theming of the documentation
+			}),
+		);
 	}
 
 	on(method: string, path: string, handler: Handler) {
@@ -59,6 +88,11 @@ export class Server {
 
 	use(subServer: Server) {
 		this.router.use(subServer.prefix, subServer.router);
+	}
+
+	public() {
+		const publicPath = path.resolve(process.cwd(), 'public');
+		Server.mainApp.use(express.static(publicPath));
 	}
 
 	listen(port: number, callback?: () => void) {

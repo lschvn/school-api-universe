@@ -1,3 +1,4 @@
+import AI from '../app/controllers/ai';
 import Character from '../app/models/character';
 import Universe from '../app/models/universe';
 import { Server } from '../server';
@@ -28,18 +29,12 @@ characterRouter.on('POST', '/new', async (event) => {
 
 	const body = (await readBody(event)) as {
 		name: string;
-		description: string;
 		univer_id: number;
 	};
 	if (!body.name) {
 		return createError(event, { status: 422, message: 'Name is required' });
 	}
-	if (!body.description) {
-		return createError(event, {
-			status: 422,
-			message: 'Description is required',
-		});
-	}
+
 	if (!body.univer_id) {
 		return createError(event, {
 			status: 422,
@@ -47,10 +42,24 @@ characterRouter.on('POST', '/new', async (event) => {
 		});
 	}
 
+	const universe = Universe.findOne(body.univer_id);
+
+	if (!universe) {
+		return createError(event, {
+			status: 404,
+			message: 'Universe not found',
+		});
+	}
+
+	const description = await AI.DescriptionCharacter(body.name, universe.description);
+
+	const avatarUrl = await AI.Avatar(description, body.name);
+
 	const characterId = Character.create({
 		name: body.name,
-		description: body.description,
+		description: description,
 		univer_id: body.univer_id,
+		avatar_url: avatarUrl,
 	});
 	if (!characterId) {
 		return createError(event, {

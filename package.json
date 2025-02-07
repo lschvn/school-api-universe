@@ -23,11 +23,13 @@
 		"typescript": "^5.0.0"
 	},
 	"dependencies": {
+		"@scalar/express-api-reference": "^0.4.180",
 		"@types/express": "^5.0.0",
 		"@types/jsonwebtoken": "^9.0.7",
 		"consola": "^3.3.0",
 		"dotenv": "^16.4.7",
 		"express": "^4.21.2",
-		"jsonwebtoken": "^9.0.2"
+		"jsonwebtoken": "^9.0.2",
+		"openai": "^4.83.0"
 	}
 }

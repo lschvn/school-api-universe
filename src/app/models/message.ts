@@ -2,17 +2,18 @@ import { db } from '../../database/db';
 
 export default class Message {
 	public id!: number;
-	public conversation_id!: string;
+	public conversation_id!: number;
 	public content!: string;
+	public sender!: 'user' | 'bot';
 	public createdAt!: Date;
 	public updatedAt!: Date;
 
 	static create(data: Partial<Message>): number | bigint {
 		const now = new Date().toISOString();
 		const query = db.prepare(
-			'INSERT INTO message (conversation_id, content, createdAt, updatedAt) VALUES (?, ?, ?)',
+			'INSERT INTO message (conversation_id, content, sender, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)',
 		);
-		const result = query.run(data.conversation_id!, data.content!, now, now);
+		const result = query.run(data.conversation_id!, data.content!, data.sender!, now, now);
 		return result.lastInsertRowid;
 	}
 

@@ -69,6 +69,7 @@ const messageMigration = () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         conversation_id INT,
         content TEXT,
+        sender TEXT,
         createdAt DATETIME,
         updatedAt DATETIME,
         CONSTRAINT fk_conversation

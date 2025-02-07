@@ -66,4 +66,23 @@ export default class Conversation {
 		`);
 		return query.get(conversationId) as User;
 	}
+
+	static getMessages(conversationId: number) {
+		const query = db.prepare(
+			'SELECT * FROM message WHERE conversation_id = ? ORDER BY createdAt ASC',
+		);
+		const results = query.all(conversationId);
+		return results;
+	}
+
+	static getConversationsForUser(userId: number) {
+		const query = db.prepare(`
+			SELECT conv.* FROM conversation conv
+			JOIN character c ON c.id = conv.character_id
+			JOIN universe univ ON univ.id = c.univer_id
+			WHERE univ.user_id = ?
+		`);
+		const results = query.all(userId);
+		return results;
+	}
 }
